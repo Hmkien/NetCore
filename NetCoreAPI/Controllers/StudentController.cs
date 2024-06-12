@@ -1,8 +1,10 @@
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NetCoreAPI.Data;
 using NetCoreAPI.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NetCoreAPI.Controllers
 {
@@ -16,17 +18,13 @@ namespace NetCoreAPI.Controllers
             _Context = context;
         }
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Student>>> GetStudent()
+        public async Task<ActionResult<IEnumerable<Student>>> GetStudents()
         {
             return await _Context.Student.ToListAsync();
         }
         [HttpGet("{studentid}")]
         public async Task<ActionResult<Student>> GetStudent(string studentid)
         {
-            if (_Context.Student == null)
-            {
-                return NotFound();
-            }
             var student = await _Context.Student.FindAsync(studentid);
             if (student == null)
             {
@@ -34,18 +32,23 @@ namespace NetCoreAPI.Controllers
             }
             return student;
         }
-        private bool CheckStudentid(string studentid)
-        {
-            return (_Context.Student?.Any(e => e.StudentID == studentid)).GetValueOrDefault();
-        }
-        [HttpPut("{studenid}")]
-        public async Task<ActionResult<Student>> PutStudent(string studentid, Student student)
+
+        [HttpPut("{studentid}")]
+        public async Task<IActionResult> PutStudent(string studentid, Student student)
         {
             if (studentid != student.StudentID)
             {
                 return BadRequest();
             }
-            _Context.Entry(student).State = EntityState.Modified;
+
+            var existingStudent = await _Context.Student.FindAsync(studentid);
+            if (existingStudent == null)
+            {
+                return NotFound();
+            }
+
+            _Context.Entry(existingStudent).CurrentValues.SetValues(student);
+
             try
             {
                 await _Context.SaveChangesAsync();
@@ -61,43 +64,44 @@ namespace NetCoreAPI.Controllers
                     throw;
                 }
             }
+
             return NoContent();
         }
+
+        private bool CheckStudentid(string studentid)
+        {
+            return (_Context.Student?.Any(e => e.StudentID == studentid)).GetValueOrDefault();
+        }
+
         [HttpPost]
         public async Task<ActionResult<Student>> PostStudent(Student student)
         {
-            if (_Context.Student == null)
-            {
-                return Problem("Danh sách null");
-            }
             _Context.Student.Add(student);
-            try{
+            try
+            {
                 await _Context.SaveChangesAsync();
             }
-            catch(DbUpdateConcurrencyException){
-            if(!CheckStudentid(student.StudentID)){
+            catch (DbUpdateConcurrencyException)
+            {
                 return Conflict();
             }
-            else{
-                throw;
-            }
-            }
-            return CreatedAtAction("GetStudent", new{studentid=student.StudentID},student);
+
+            return CreatedAtAction("GetStudent", new { studentid = student.StudentID }, student);
         }
+
         [HttpDelete("{studentid}")]
-        public async Task<IActionResult> DeleteStudent(string studentid){
-             if (_Context.Student == null)
+        public async Task<IActionResult> DeleteStudent(string studentid)
+        {
+            var student = await _Context.Student.FindAsync(studentid);
+            if (student == null)
             {
                 return NotFound();
             }
-            var student = _Context.Student.Find(studentid);
-            if(student == null){
-                return NotFound();
-            }
+
             _Context.Student.Remove(student);
             await _Context.SaveChangesAsync();
-            return NoContent();
-            }
-        }
 
+            return NoContent();
+        }
     }
+}

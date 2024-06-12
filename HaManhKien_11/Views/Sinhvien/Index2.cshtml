@@ -1,0 +1,50 @@
+@model IEnumerable<HaManhKien_11.Models.ViewModels.SinhVienVM>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.MaSinhVien)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HoTen)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MaLop)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TenLop)
+            </th>
+
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.MaSinhVien)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.HoTen)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.MaLop)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TenLop)
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
